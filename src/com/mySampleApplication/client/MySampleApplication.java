@@ -43,87 +43,107 @@ public class MySampleApplication implements EntryPoint {
         for (int i = 0; i < columnNames.length; i++)
             table.setHTML(0, i, columnNames[i]);
 
+        // add Click Handler to add data to the table
         addToTableButton.addClickHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
-                try {
-                    double a = new Double(textBox_a.getText());
-                    double b = new Double(textBox_b.getText());
-                    double c = new Double(textBox_c.getText());
-
-                    if ((a > 0) && (b > 0) && (c > 0)) {
-                        if (((a+b) > c)&&((c+b) > a)&&((a+c) > b)) {
-                            //Window.alert("Good!");
-                            int row_index = table.getRowCount();
-                            CheckBox checkBox = new CheckBox();
-                            table.setWidget(row_index, 0, checkBox);
-                            String[] sRow = new String[]{String.valueOf(a), String.valueOf(b), String.valueOf(c)};
-                            for (int i = 0; i < sRow.length; i++)
-                                table.setText(row_index, i + 1, sRow[i]);
-
-                            Button pButton = new Button("Perimeter");
-                            Button sButton = new Button("Square");
-
-                            pButton.addClickHandler(new ClickHandler() {
-                                @Override
-                                public void onClick(ClickEvent event) {
-                                    Node row = pButton.getElement().getParentNode().getParentNode();
-
-                                    double aa = Double.parseDouble(((Element) row.getChild(1)).getInnerText());
-                                    double bb = Double.parseDouble(((Element) row.getChild(2)).getInnerText());
-                                    double cc = Double.parseDouble(((Element) row.getChild(3)).getInnerText());
-
-                                    String result = String.valueOf(aa + bb + cc);
-                                    ((Element) row.getChild(4)).setInnerHTML(result);
-
-                                }
-                            });
-
-                            sButton.addClickHandler(new ClickHandler() {
-                                @Override
-                                public void onClick(ClickEvent event) {
-                                    Node row = sButton.getElement().getParentNode().getParentNode();
-
-                                    double aa = Double.parseDouble(((Element) row.getChild(1)).getInnerText());
-                                    double bb = Double.parseDouble(((Element) row.getChild(2)).getInnerText());
-                                    double cc = Double.parseDouble(((Element) row.getChild(3)).getInnerText());
-
-                                    double p = (aa + bb + cc) / 2;
-                                    String result = String.valueOf(Math.sqrt(p * (p - aa) * (p - bb) * (p - cc)));
-                                    ((Element) row.getChild(5)).setInnerHTML(result);
-                                }
-                            });
-
-                            table.setWidget(row_index, 4, pButton);
-                            table.setWidget(row_index, 5, sButton);
-                        } else {
-                            Window.alert("Incorrect data! Such triangle doesn't exist. Try again");
-                        }
-                    } else
-                        Window.alert("Incorrect data! All numbers have to be greater than zero. Try again");
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                    Window.alert("Incorrect data! Try again");
-                }
+                addToTableHandler(textBox_a, textBox_b, textBox_c, table);
             }
         });
 
-
+        //add Click Handler to delete selected rows
         deleteButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
-                for (int i = 1; i < table.getRowCount(); i++) {
-                    boolean status = ((Element) table.getElement().getLastChild().getChild(i).getFirstChild().getFirstChild().getFirstChild()).getPropertyBoolean("checked");
-                    if (status) {
-                        table.removeRow(i);
-                        i--;
-                    }
-                }
+                deleteHandler(table);
             }
 
         });
 
         RootPanel.get("slot1").add(verticalPanel1);
         RootPanel.get("slot2").add(table);
+    }
+
+    private void addToTableHandler(TextBox textBox_a, TextBox textBox_b, TextBox textBox_c, FlexTable table) {
+        try {
+            double a = new Double(textBox_a.getText());
+            double b = new Double(textBox_b.getText());
+            double c = new Double(textBox_c.getText());
+
+            if ((a > 0) && (b > 0) && (c > 0)) {
+                if (((a+b) > c)&&((c+b) > a)&&((a+c) > b)) {
+                    //create a row data
+                    int row_index = table.getRowCount();
+                    CheckBox checkBox = new CheckBox();
+                    table.setWidget(row_index, 0, checkBox);
+                    String[] sRow = new String[]{String.valueOf(a), String.valueOf(b), String.valueOf(c)};
+                    for (int i = 0; i < sRow.length; i++)
+                        table.setText(row_index, i + 1, sRow[i]);
+
+                    Button pButton = new Button("Perimeter");
+                    Button sButton = new Button("Square");
+
+                    //add Click Handler to replace button with perimeter
+                    pButton.addClickHandler(new ClickHandler() {
+                        @Override
+                        public void onClick(ClickEvent event) {
+                            getPerimeter(pButton);
+
+                        }
+                    });
+
+                    //add Click Handler to replace button with square
+                    sButton.addClickHandler(new ClickHandler() {
+                        @Override
+                        public void onClick(ClickEvent event) {
+                            getSquare(sButton);
+                        }
+                    });
+
+                    table.setWidget(row_index, 4, pButton);
+                    table.setWidget(row_index, 5, sButton);
+                } else {
+                    Window.alert("Incorrect data! Such triangle doesn't exist. Try again");
+                }
+            } else
+                Window.alert("Incorrect data! All numbers have to be greater than zero. Try again");
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            Window.alert("Incorrect data! Try again");
+        }
+    }
+
+    private void getSquare(Button sButton) {
+        Node row = sButton.getElement().getParentNode().getParentNode();
+
+        double aa = Double.parseDouble(((Element) row.getChild(1)).getInnerText());
+        double bb = Double.parseDouble(((Element) row.getChild(2)).getInnerText());
+        double cc = Double.parseDouble(((Element) row.getChild(3)).getInnerText());
+
+        double p = (aa + bb + cc) / 2;
+        double square = Math.sqrt(p * (p - aa) * (p - bb) * (p - cc));
+        String result = String.valueOf(square);
+        ((Element) row.getChild(5)).setInnerHTML(result);
+    }
+
+    private void getPerimeter(Button pButton) {
+        Node row = pButton.getElement().getParentNode().getParentNode();
+
+        double aa = Double.parseDouble(((Element) row.getChild(1)).getInnerText());
+        double bb = Double.parseDouble(((Element) row.getChild(2)).getInnerText());
+        double cc = Double.parseDouble(((Element) row.getChild(3)).getInnerText());
+
+        String result = String.valueOf(aa + bb + cc);
+        ((Element) row.getChild(4)).setInnerHTML(result);
+    }
+
+    private void deleteHandler(FlexTable table) {
+        for (int i = 1; i < table.getRowCount(); i++) {
+            boolean status = ((Element) table.getElement().getLastChild().getChild(i).getFirstChild().getFirstChild().getFirstChild()).getPropertyBoolean("checked");
+            if (status) {
+                table.removeRow(i);
+                i--;
+            }
+        }
     }
 
 
